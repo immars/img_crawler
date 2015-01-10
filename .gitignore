@@ -1,0 +1,13 @@
+
+*~
+*.pyc
+/*/project.egg-info
+/*/build
+image_data
+/example
+scrapyd/dbs
+scrapyd/items
+scrapyd/logs
+scrapyd/eggs
+scrapyd/twistd.pid
+

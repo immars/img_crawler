@@ -1,0 +1,40 @@
+
+addversion.json
+
+	curl http://localhost:6800/addversion.json -F project=myproject -F version=r23 -F egg=@myproject.egg
+
+chedule.json
+Schedule a spider run (also known as a job), returning the job id.
+
+	curl http://localhost:6800/schedule.json -d project=myproject -d spider=somespider
+
+cancel.json
+Cancel a spider run (aka. job). If the job is pending, it will be removed. If the job is running, it will be terminated.
+
+	curl http://localhost:6800/cancel.json -d project=myproject -d job=6487ec79947edab326d6db28a2d86511e8247444
+
+listprojects.json
+
+	curl http://localhost:6800/listprojects.json
+
+listversions.json
+
+	curl http://localhost:6800/listversions.json?project=myproject
+
+listspiders.json
+
+	curl http://localhost:6800/listspiders.json?project=myproject
+
+listjobs.json
+
+	curl http://localhost:6800/listjobs.json?project=myproject
+
+delversion.json
+Delete a project version. If there are no more versions available for a given project, that project will be deleted too.
+
+	curl http://localhost:6800/delversion.json -d project=myproject -d version=r99
+
+delproject.json
+
+	curl http://localhost:6800/delproject.json -d project=myproject
+
