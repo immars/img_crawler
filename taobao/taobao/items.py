@@ -9,18 +9,41 @@ import scrapy
 
 # product for sale
 class ProductItem(scrapy.Item):
-	id = scrapy.Field()
-	name = scrapy.Field()
-	tags = scrapy.Field()
-	url = scrapy.Field()
-	price = scrapy.Field()
-	images = scrapy.Field()
-	image_urls = scrapy.Field()
-    # define the fields for your item here like:
-    # name = scrapy.Field()
+    id = scrapy.Field()
+    name = scrapy.Field()
+    tags = scrapy.Field()
+    url = scrapy.Field()
+    price = scrapy.Field()
+    images = scrapy.Field()
+    image_urls = scrapy.Field()
+    # product properties
+    # 材质 / 面料
+    material = scrapy.Field()
+    # 领子
+    collar = scrapy.Field()
+    # 厚薄
+    thickness = scrapy.Field()
+    # 图案
+    pattern = scrapy.Field()
+    # 款式
+    style = scrapy.Field()
+    # 品牌
+    brand = scrapy.Field()
+    # 袖长
+    sleeve = scrapy.Field()
+    # 拉链
+    zipper = scrapy.Field()
+    # 裙长
+    skirt = scrapy.Field()
+    # 鞋头款式
+    shoe_head = scrapy.Field()
+    # 鞋跟
+    heel = scrapy.Field()
+    # 包包的 提拎部件类型
+    handle = scrapy.Field()
 
 # attributes for filter product search
 
 class AttrItem(scrapy.Item):
-	name = scrapy.Field()
+    name = scrapy.Field()
 

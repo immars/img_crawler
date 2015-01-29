@@ -6,6 +6,19 @@ from taobao.items import ProductItem
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.contrib.linkextractors import LinkExtractor
 
+
+def prop_get(pmap, names):
+    tmp = None
+    for name in names:
+        if not tmp:
+            tmp = pmap.get(name)
+        else:
+            break
+    if not tmp:
+        tmp = ''
+
+    return tmp
+
 '''
 main page:
     http://nvren.taobao.com/
@@ -95,3 +108,153 @@ class TaobaoSpider(CrawlSpider):
         item['id'] = response.css('div#J_Pine::attr("data-itemid")').extract()
 
         return item
+
+
+'''
+    TMALL spider
+main pages:
+    http://nvzhuang.tmall.com/
+    http://nvxie.tmall.com/
+    http://bag.tmall.com/
+
+topic pages:
+    http://www.tmall.com/go/market/promotion-act/xiangbaofenqigoudierqi.php
+    http://www.tmall.com/go/market/promotion-act/xiangbaowoshinianhuo.php
+    http://www.tmall.com/go/market/fushi/chongaizj.php
+    http://www.tmall.com/go/market/fushi/module2014-1.php
+    http://www.tmall.com/go/market/fushi/loveziji.php
+    http://www.tmall.com/go/market/fushi/module2014-2.php
+
+
+market lists:
+        page down:s=60
+    http://list.tmall.com/search_product.htm?&vmarket=48386
+    http://list.tmall.com/search_product.htm?sort=s&cat=51024008
+    http://list.tmall.com/search_product.htm?sort=s&cat=51024008
+    http://list.tmall.com/search_product.htm?brand=3713796&q=MCM&sort=s
+
+brand pages:
+        or:http://xxx.tmall.com/index.htm
+    http://memxiangbao.tmall.com/
+    http://qiwang.tmall.com/
+    http://panbixuan.tmall.com/
+    http://panbixuan.tmall.com/
+
+item:
+    http://detail.tmall.com/item.htm?id=13505747865
+
+'''
+class TaobaoSpider(CrawlSpider):
+    name="tmall"
+    allow_domains = ["tmall.com"]
+
+    start_urls = ["http://nvzhuang.tmall.com/","http://nvxie.tmall.com/","http://bag.tmall.com/"]
+
+    rules = (
+        # Extract links matching 'category.php' (but not matching 'subsection.php'
+        # and follow links from them (since no callback means follow=True by default).
+        Rule(LinkExtractor(allow=('/go/market/.*\.php', )), callback='check_response', follow=True, process_links='prolink_market', process_request='handle_cookie'),
+        Rule(LinkExtractor(allow=('/list\?', )), callback='check_response', follow=True, process_links='prolink_list', process_request='handle_cookie'),
+        Rule(LinkExtractor(allow=('/', '/index.htm'), allow_domains=("tmall.com",)), callback='check_response', follow=True, process_links='prolink_brand', process_request='handle_cookie'),
+        # Extract links matching 'item.php' and parse them with the spider's method parse_item
+        Rule(LinkExtractor(allow=('item\.htm', ), deny_domains=("chaoshi.detail.tmall.com",)), process_links='prolink_item', callback='parse_item'),
+    )
+
+    def check_response(self, response):
+        # self.log("response[%s]: %s" % (response.url, response.headers))
+        pass
+
+    def prolink_market(self, links):
+        """
+        http://www.tmall.com/go/market/promotion-act/xiangbaofenqigoudierqi.php
+        """
+        # self.log("market found:%s" % links)
+        for l in links:
+            l.url=l.url.split('?')[0]
+        # self.log("market link processed:%s" % links)
+        return links
+
+    def prolink_list(self, links):
+        """
+        page down:s=60
+        http://list.tmall.com/search_product.htm?&vmarket=48386
+        http://list.tmall.com/search_product.htm?sort=s&cat=51024008
+        http://list.tmall.com/search_product.htm?sort=s&cat=51024008
+        http://list.tmall.com/search_product.htm?brand=3713796&q=MCM&sort=s
+        """
+        for l in links:
+            url = l.url
+            qparam=filter(lambda x:any(x.startswith(pre) for pre in ["vmarket=","sort=","cat=","brand=","q=","s="]), url[url.index('?')+1:].split('&'))
+            if(len(qparam)>0):
+                l.url= "%s?%s" % (url[:url.index('?')], qparam[0])
+        # self.log("search link processed:%s" % links)
+        return links
+
+    def prolink_brand(self, links):
+        """
+        or:http://xxx.tmall.com/index.htm
+        http://memxiangbao.tmall.com/
+        http://qiwang.tmall.com/
+        http://panbixuan.tmall.com/
+        http://panbixuan.tmall.com/
+        """
+        # self.log("market found:%s" % links)
+        for l in links:
+            l.url=l.url.split('?')[0]
+        # self.log("market link processed:%s" % links)
+        return links
+
+
+    def prolink_item(self, links):
+        """
+        http://detail.tmall.com/item.htm?id=13505747865
+        """
+        for l in links:
+            url = l.url
+            qparam=filter(lambda x:x.startswith("id="), url[url.index('?')+1:].split('&'))
+            if(len(qparam)>0):
+                l.url= "%s?%s" % (url[:url.index('?')], qparam[0])
+        self.log("item link processed:%s" % links)
+        return links
+
+    def handle_cookie(self, request):
+        # auto handled?
+        # self.log("request[%s]cookie:%s" % (request.url, request.cookies))
+        # self.log("request[%s] headers: %s" % (request.url, request.headers))
+        return request
+
+    def parse_item(self, response):
+        if len(response.css(".errorPage")) > 0:
+            self.log('item NOT FOUND page: %s' % response.url)
+            return
+
+        self.log('Hi, this is an item page! %s' % response.url)
+        item = ProductItem()
+        image_urls=response.css("#J_UlThumb img::attr('src')").extract()
+        item['image_urls'] = [url.replace('60x60','400x400') for url in image_urls]
+        #http://img02.taobaocdn.com/imgextra/i2/2118504882/TB285zRaVXXXXazXXXXXXXXXXXX_!!2118504882.jpg_50x50.jpg
+        item['name'] = response.css("div.tb-detail-hd h1::text").extract()
+        item['price'] = response.css("div.tb-property-cont em.tb-rmb-num::text").extract()
+        item['url'] = response.url
+        item['id'] = response.url.split('id=')[1]
+        props = [x.split(u":\xa0") for x in response.css("#J_AttrUL li::text").extract()]
+        pmap = {}
+        for p in props:
+            if(len(p)==2):
+                pmap[p[0]]=p[1]
+
+        item['material'] = prop_get(pmap, [u'材质', u'面料', u'面料材质', u'鞋面材质'])
+        item['collar'] = prop_get(pmap, [u'领子'])
+        item['thickness'] = prop_get(pmap, [u'厚薄'])
+        item['pattern'] = prop_get(pmap, [u'图案'])
+        item['style'] = prop_get(pmap, [u'款式'])
+        item['brand'] = prop_get(pmap, [u'品牌'])
+        item['sleeve'] = prop_get(pmap, [u'袖长'])
+        item['zipper'] = prop_get(pmap, [u'衣门襟'])
+        item['skirt'] = prop_get(pmap, [u'裙长'])
+        item['shoe_head'] = prop_get(pmap, [u'鞋头款式'])
+        item['heel'] = prop_get(pmap, [u'鞋跟'])
+        item['handle'] = prop_get(pmap, [u'提拎部件类型'])
+        return item
+
+
