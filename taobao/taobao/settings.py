@@ -20,15 +20,20 @@ DEFAULT_REQUEST_HEADERS = {
 }
 
 ITEM_PIPELINES = {'scrapy.contrib.pipeline.images.ImagesPipeline': 1}
-IMAGES_STORE = '/home/immars/work/search/scrapy/taobao/image_data'
+# IMAGES_STORE = '/home/immars/work/search/scrapy/taobao/image_data'
+IMAGES_STORE = '/home/immars/work/search/images/taobao'
 
 COOKIES_ENABLED = True
 
-COOKIES_DEBUG = True
-
+COOKIES_DEBUG = False
 
 SPIDER_MODULES = ['taobao.spiders']
 NEWSPIDER_MODULE = 'taobao.spiders'
+
+AUTOTHROTTLE_ENABLED = True
+CONCURRENT_REQUESTS_PER_DOMAIN = 4
+
+DEPTH_LIMIT = 6
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'taobao (+http://www.yourdomain.com)'

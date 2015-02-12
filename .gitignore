@@ -1,6 +1,7 @@
 
 *~
 *.pyc
+taobao/setup.py
 /*/project.egg-info
 /*/build
 image_data

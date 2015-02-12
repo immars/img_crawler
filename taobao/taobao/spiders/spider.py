@@ -107,6 +107,27 @@ class TaobaoSpider(CrawlSpider):
         item['url'] = response.url
         item['id'] = response.css('div#J_Pine::attr("data-itemid")').extract()
 
+        props = [x.split(u":\xa0") for x in response.css("#J_AttrUL li::text").extract()]
+        pmap = {}
+        for p in props:
+            if(len(p)==2):
+                pmap[p[0]]=p[1]
+
+        item['material'] = prop_get(pmap, [u'材质', u'面料', u'面料材质', u'鞋面材质'])
+        item['collar'] = prop_get(pmap, [u'领子'])
+        item['thickness'] = prop_get(pmap, [u'厚薄'])
+        item['pattern'] = prop_get(pmap, [u'图案'])
+        item['style'] = prop_get(pmap, [u'款式'])
+        item['brand'] = prop_get(pmap, [u'品牌'])
+        item['sleeve'] = prop_get(pmap, [u'袖长'])
+        item['zipper'] = prop_get(pmap, [u'衣门襟'])
+        item['skirt'] = prop_get(pmap, [u'裙长'])
+        item['shoe_head'] = prop_get(pmap, [u'鞋头款式'])
+        item['heel'] = prop_get(pmap, [u'鞋跟'])
+        item['handle'] = prop_get(pmap, [u'提拎部件类型'])
+        return item
+
+
         return item
 
 
@@ -144,7 +165,7 @@ item:
     http://detail.tmall.com/item.htm?id=13505747865
 
 '''
-class TaobaoSpider(CrawlSpider):
+class TMallSpider(CrawlSpider):
     name="tmall"
     allow_domains = ["tmall.com"]
 
@@ -153,11 +174,11 @@ class TaobaoSpider(CrawlSpider):
     rules = (
         # Extract links matching 'category.php' (but not matching 'subsection.php'
         # and follow links from them (since no callback means follow=True by default).
-        Rule(LinkExtractor(allow=('/go/market/.*\.php', )), callback='check_response', follow=True, process_links='prolink_market', process_request='handle_cookie'),
-        Rule(LinkExtractor(allow=('/list\?', )), callback='check_response', follow=True, process_links='prolink_list', process_request='handle_cookie'),
-        Rule(LinkExtractor(allow=('/', '/index.htm'), allow_domains=("tmall.com",)), callback='check_response', follow=True, process_links='prolink_brand', process_request='handle_cookie'),
+        Rule(LinkExtractor(allow=('/go/market/.*\.php', ), pass_meta=['url_stack']), callback='check_response', follow=True, process_links='prolink_market', process_request='handle_cookie'),
+        Rule(LinkExtractor(allow=('/list\?', ), pass_meta=['url_stack']), callback='check_response', follow=True, process_links='prolink_list', process_request='handle_cookie'),
+        Rule(LinkExtractor(allow=('/', '/index.htm'), allow_domains=("tmall.com",), pass_meta=['url_stack'], ), callback='check_response', follow=True, process_links='prolink_brand', process_request='handle_cookie'),
         # Extract links matching 'item.php' and parse them with the spider's method parse_item
-        Rule(LinkExtractor(allow=('item\.htm', ), deny_domains=("chaoshi.detail.tmall.com",)), process_links='prolink_item', callback='parse_item'),
+        Rule(LinkExtractor(allow=('item\.htm', ), deny_domains=("chaoshi.detail.tmall.com",), pass_meta=['url_stack'],), process_links='prolink_item', callback='parse_item'),
     )
 
     def check_response(self, response):
@@ -214,16 +235,22 @@ class TaobaoSpider(CrawlSpider):
             qparam=filter(lambda x:x.startswith("id="), url[url.index('?')+1:].split('&'))
             if(len(qparam)>0):
                 l.url= "%s?%s" % (url[:url.index('?')], qparam[0])
-        self.log("item link processed:%s" % links)
+        #self.log("item link processed:%s" % links)
         return links
 
     def handle_cookie(self, request):
         # auto handled?
-        # self.log("request[%s]cookie:%s" % (request.url, request.cookies))
-        # self.log("request[%s] headers: %s" % (request.url, request.headers))
+        # url_stack
+        if not request.meta:
+            request.meta={}
+        if not request.meta.get('url_stack'):
+            request.meta['url_stack']=[]
+        #request.meta['url_stack'].append({'url':request.url, 'text':request.meta['link_text']})
+        #self.log("handle_cookie: meta:%s" % request.meta)
         return request
 
     def parse_item(self, response):
+        self.log("item response meta:%s" % response.meta)
         if len(response.css(".errorPage")) > 0:
             self.log('item NOT FOUND page: %s' % response.url)
             return
@@ -231,12 +258,13 @@ class TaobaoSpider(CrawlSpider):
         self.log('Hi, this is an item page! %s' % response.url)
         item = ProductItem()
         image_urls=response.css("#J_UlThumb img::attr('src')").extract()
-        item['image_urls'] = [url.replace('60x60','400x400') for url in image_urls]
+        item['image_urls'] = [url.replace('60x60','430x430') for url in image_urls]
         #http://img02.taobaocdn.com/imgextra/i2/2118504882/TB285zRaVXXXXazXXXXXXXXXXXX_!!2118504882.jpg_50x50.jpg
         item['name'] = response.css("div.tb-detail-hd h1::text").extract()
         item['price'] = response.css("div.tb-property-cont em.tb-rmb-num::text").extract()
         item['url'] = response.url
         item['id'] = response.url.split('id=')[1]
+        item['url_stack'] = response.meta.get('url_stack')
         props = [x.split(u":\xa0") for x in response.css("#J_AttrUL li::text").extract()]
         pmap = {}
         for p in props:

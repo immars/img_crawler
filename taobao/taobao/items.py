@@ -13,6 +13,7 @@ class ProductItem(scrapy.Item):
     name = scrapy.Field()
     tags = scrapy.Field()
     url = scrapy.Field()
+    url_stack = scrapy.Field()
     price = scrapy.Field()
     images = scrapy.Field()
     image_urls = scrapy.Field()
