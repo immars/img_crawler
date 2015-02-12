@@ -14,7 +14,7 @@ USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Ge
 
 DEFAULT_REQUEST_HEADERS = {
 		'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-		# Accept-Encoding:gzip, deflate, sdch
+		'Accept-Encoding' : 'gzip, deflate, sdch',
 		'Accept-Language' : 'zh-CN,zh;q=0.8',
 		'Cache-Control' : 'max-age=0',
 }
@@ -31,7 +31,7 @@ SPIDER_MODULES = ['taobao.spiders']
 NEWSPIDER_MODULE = 'taobao.spiders'
 
 AUTOTHROTTLE_ENABLED = True
-CONCURRENT_REQUESTS_PER_DOMAIN = 4
+CONCURRENT_REQUESTS_PER_DOMAIN = 2
 
 DEPTH_LIMIT = 6
 

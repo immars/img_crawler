@@ -155,7 +155,8 @@ market lists:
     http://list.tmall.com/search_product.htm?brand=3713796&q=MCM&sort=s
 
 brand pages:
-        or:http://xxx.tmall.com/index.htm
+        or:
+    http://xxx.tmall.com/index.htm
     http://memxiangbao.tmall.com/
     http://qiwang.tmall.com/
     http://panbixuan.tmall.com/
@@ -176,9 +177,15 @@ class TMallSpider(CrawlSpider):
         # and follow links from them (since no callback means follow=True by default).
         Rule(LinkExtractor(allow=('/go/market/.*\.php', ), pass_meta=['url_stack']), callback='check_response', follow=True, process_links='prolink_market', process_request='handle_cookie'),
         Rule(LinkExtractor(allow=('/list\?', ), pass_meta=['url_stack']), callback='check_response', follow=True, process_links='prolink_list', process_request='handle_cookie'),
-        Rule(LinkExtractor(allow=('/', '/index.htm'), allow_domains=("tmall.com",), pass_meta=['url_stack'], ), callback='check_response', follow=True, process_links='prolink_brand', process_request='handle_cookie'),
+        Rule(
+            LinkExtractor(allow=('/', '/index.htm'),
+                allow_domains=("tmall.com",),
+                deny_domains=("www.tmall.com",),
+                pass_meta=['url_stack'], ),
+            callback='parse_brand',
+            process_links='prolink_brand', process_request='handle_cookie'),
         # Extract links matching 'item.php' and parse them with the spider's method parse_item
-        Rule(LinkExtractor(allow=('item\.htm', ), deny_domains=("chaoshi.detail.tmall.com",), pass_meta=['url_stack'],), process_links='prolink_item', callback='parse_item'),
+        Rule(LinkExtractor(allow=('item\.htm', ), allow_domains=("detail.tmall.com"), deny_domains=("chaoshi.detail.tmall.com",), pass_meta=['url_stack'],), process_links='prolink_item', callback='parse_item'),
     )
 
     def check_response(self, response):
@@ -225,6 +232,19 @@ class TMallSpider(CrawlSpider):
         # self.log("market link processed:%s" % links)
         return links
 
+    def parse_brand(self, response):
+        """
+        decide wether this xxx.tmall.com is a brand shop:
+        http://yintai.tmall.com
+            or a tmall channel:
+http://jia.tmall.com
+
+        """
+        if len(response.css("#shopExtra")) == 0:
+            self.log("DENIED brand url:%s" % response.url)
+            return []
+
+        return self._requests_to_follow(response)
 
     def prolink_item(self, links):
         """
