@@ -42,6 +42,16 @@ class ProductItem(scrapy.Item):
     heel = scrapy.Field()
     # 包包的 提拎部件类型
     handle = scrapy.Field()
+    # 包包的 肩带样式
+    girdle = scrapy.Field()
+    # 旅行箱/包包 箱包硬度
+    hardness = scrapy.Field()
+    # 包包 形状
+    shape = scrapy.Field()
+    # 旅行箱 有无拉杆
+    case_handle = scrapy.Field()
+    # 滚轮样式
+    wheel = scrapy.Field()
 
 # attributes for filter product search
 

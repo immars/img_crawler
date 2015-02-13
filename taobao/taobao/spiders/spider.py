@@ -175,17 +175,17 @@ class TMallSpider(CrawlSpider):
     rules = (
         # Extract links matching 'category.php' (but not matching 'subsection.php'
         # and follow links from them (since no callback means follow=True by default).
-        Rule(LinkExtractor(allow=('/go/market/.*\.php', ), pass_meta=['url_stack']), callback='check_response', follow=True, process_links='prolink_market', process_request='handle_cookie'),
-        Rule(LinkExtractor(allow=('/list\?', ), pass_meta=['url_stack']), callback='check_response', follow=True, process_links='prolink_list', process_request='handle_cookie'),
+        Rule(LinkExtractor(allow=('/go/market/.*\.php', ), ), callback='check_response', follow=True, process_links='prolink_market', process_request='handle_cookie'),
+        Rule(LinkExtractor(allow=('/list\?', ), ), callback='check_response', follow=True, process_links='prolink_list', process_request='handle_cookie'),
         Rule(
             LinkExtractor(allow=('/', '/index.htm'),
                 allow_domains=("tmall.com",),
                 deny_domains=("www.tmall.com",),
-                pass_meta=['url_stack'], ),
+            ),
             callback='parse_brand',
             process_links='prolink_brand', process_request='handle_cookie'),
         # Extract links matching 'item.php' and parse them with the spider's method parse_item
-        Rule(LinkExtractor(allow=('item\.htm', ), allow_domains=("detail.tmall.com"), deny_domains=("chaoshi.detail.tmall.com",), pass_meta=['url_stack'],), process_links='prolink_item', callback='parse_item'),
+        Rule(LinkExtractor(allow=('item\.htm', ), allow_domains=("detail.tmall.com"), deny_domains=("chaoshi.detail.tmall.com",), ), process_links='prolink_item', callback='parse_item'),
     )
 
     def check_response(self, response):
@@ -303,6 +303,11 @@ http://jia.tmall.com
         item['shoe_head'] = prop_get(pmap, [u'鞋头款式'])
         item['heel'] = prop_get(pmap, [u'鞋跟'])
         item['handle'] = prop_get(pmap, [u'提拎部件类型'])
+        item['girdle'] = prop_get(pmap, [u'肩带样式'])
+        item['hardness'] = prop_get(pmap, [u'箱包硬度'])
+        item['shape'] = prop_get(pmap, [u'形状'])
+        item['case_handle'] = prop_get(pmap, [u'有无拉杆'])
+        item['wheel'] = prop_get(pmap, [u'滚轮样式'])
         return item
 
 
