@@ -12,7 +12,11 @@ awk -F'\t' '{print $7;}' $textfile | sort | uniq > brand.txt
 awk -F'\t' '{print $8;}' $textfile | sort | uniq > sleeve.txt
 awk -F'\t' '{print $9;}' $textfile | sort | uniq > zipper.txt
 awk -F'\t' '{print $10;}' $textfile | sort | uniq > shoe_head.txt
-awk -F'\t' '{print $11;}' $textfile | sort | uniq > hell.txt
 awk -F'\t' '{print $11;}' $textfile | sort | uniq > heel.txt
 awk -F'\t' '{print $12;}' $textfile | sort | uniq > handle.txt
+awk -F'\t' '{print $13;}' $textfile | sort | uniq > girdle.txt 
+awk -F'\t' '{print $14;}' $textfile | sort | uniq > hardness.txt
+awk -F'\t' '{print $15;}' $textfile | sort | uniq > shape.txt
+awk -F'\t' '{print $16;}' $textfile | sort | uniq > case_handle.txt
+awk -F'\t' '{print $17;}' $textfile | sort | uniq > wheel.txt
 

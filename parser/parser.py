@@ -58,7 +58,12 @@ def parse_items(path):
             shoe_head = try_get(item, 'shoe_head')
             heel = try_get(item, 'heel')
             handle = try_get(item, 'handle')
-            print "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (name, material, collar, pattern, thickness, style, brand, sleeve, zipper, shoe_head, heel, handle)
+            girdle = try_get(item, 'girdle')
+            hardness = try_get(item, 'hardness')
+            shape = try_get(item, 'shape')
+            case_handle = try_get(item, 'case_handle')
+            wheel = try_get(item, 'wheel')
+            print "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (name, material, collar, pattern, thickness, style, brand, sleeve, zipper, shoe_head, heel, handle, girdle, hardness, shape, case_handle, wheel)
         except Exception,e:
             print e
             pass
