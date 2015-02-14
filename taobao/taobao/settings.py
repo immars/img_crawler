@@ -33,7 +33,7 @@ NEWSPIDER_MODULE = 'taobao.spiders'
 AUTOTHROTTLE_ENABLED = True
 CONCURRENT_REQUESTS_PER_DOMAIN = 2
 
-DEPTH_LIMIT = 6
+DEPTH_LIMIT = 9
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'taobao (+http://www.yourdomain.com)'
