@@ -1,6 +1,7 @@
-
+.idea
 *~
 *.pyc
+/temp
 taobao/setup.py
 /*/project.egg-info
 /*/build
