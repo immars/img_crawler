@@ -2,15 +2,20 @@
 # -*- coding: utf-8 -*-
 
 
+from __future__ import print_function
 import json
 import sys
 import codecs
 import numpy as np
 import traceback
 
+
+def warning(*objs):
+    print("WARNING: ", *objs, file=sys.stderr)
+
 UTF8Writer = codecs.getwriter('utf8')
 sys.stdout = UTF8Writer(sys.stdout)
-
+sys.stderr = UTF8Writer(sys.stderr)
 
 def escape(f):
     def f_esc(*args):
@@ -18,7 +23,7 @@ def escape(f):
         if ret is None:
             ret = ''
         ret = "%s" % ret
-        return ret.replace('\t','').replace('\r', '').replace('\n', '')
+        return ret.replace('\t', '').replace('\r', '').replace('\n', '')
     return f_esc
 
 
@@ -32,7 +37,7 @@ def none2empty(f):
 
 
 def to_unicode(string):
-    return unicode(string.replace('\r', '').replace('\n',''), 'utf-8')
+    return unicode(string.replace('\r', '').replace('\n', ''), 'utf-8')
 
 
 @escape
@@ -81,14 +86,17 @@ class LabelGroup:
         """
         ret = []
         for l in self.labels:
+            is_l = False
             for n in l.names:
                 if text.find(n) >= 0:
                     ret.append(l)
+                    is_l = True
                     break
-            if len(ret) > 0:
+            if is_l:
                 if self.group_type == 'type':
-                    self.match_sub(l, text, ret)
-                    break
+                    self.add_parent(l, ret)
+                    # self.match_sub(l, text, ret)
+                    # break
                 elif not self.allow_multiple:
                     break
         return ret
@@ -101,6 +109,13 @@ class LabelGroup:
                     if len(l.sub) > 0:
                         self.match_sub(l, text, result)
                     return
+
+    def add_parent(self, label, result):
+        parent = label.parent
+        while parent is not None:
+            if result.count(parent) == 0:
+                result.append(parent)
+            parent = parent.parent
 
 
 class LabelMap:
@@ -179,7 +194,7 @@ class LabelMap:
                         if cur_parentlabel is not None:
                             cur_parentlabel = cur_parentlabel.parent
                     cur_indent = indent
-                tk = tk[-1].split(' ')
+                tk = filter(lambda x: x != '', tk[-1].split(' '))
                 label = self.new_label(tk, cur_labelgroup.group_type)
 
                 if cur_parentlabel is not None:
@@ -200,7 +215,7 @@ def export_labels(label_path):
             n = l.names[0]
         else:
             n = l.names
-        print "%d\t%s" % (l_id, n)
+        print("%d\t%s" % (l_id, n))
         l_id += 1
     pass
 
@@ -239,6 +254,7 @@ def lookup_label_fill_in(item, label_group, vector):
             vector[l.l_id] = 1
     return found_labels
 
+
 def export_images(label_path, item_path):
     """
     解析 item_path对应的 scrapy item json，
@@ -252,24 +268,6 @@ def export_images(label_path, item_path):
         l_vector = np.zeros(len(lm.id2labels), dtype=np.int8)
         try:
             name = try_get(item, 'name', 0)
-            """
-            material = try_get(item, 'material')
-            collar = try_get(item, 'collar')
-            pattern = try_get(item, 'pattern')
-            thickness = try_get(item, 'thickness')
-            style = try_get(item, 'style')
-            brand = try_get(item, 'brand')
-            sleeve = try_get(item, 'sleeve')
-            zipper = try_get(item, 'zipper')
-            shoe_head = try_get(item, 'shoe_head')
-            heel = try_get(item, 'heel')
-            handle = try_get(item, 'handle')
-            girdle = try_get(item, 'girdle')
-            hardness = try_get(item, 'hardness')
-            shape = try_get(item, 'shape')
-            case_handle = try_get(item, 'case_handle')
-            wheel = try_get(item, 'wheel')
-            """
             #先判断物品的类型
             type_group = None
             type_labels = None
@@ -284,6 +282,9 @@ def export_images(label_path, item_path):
                     type_labels = labels
                     item_attr_groups = lm.item_attr_groups[i]
                     break
+            if type_labels is None:
+                warning("can't determine type:\t%s" % name)
+                continue
             found_labels += type_labels
             # 根据物品类型，确定那些labelGroup需要赋值。
             # 不属于此物品类型的，全部 -1
@@ -310,8 +311,8 @@ def export_images(label_path, item_path):
 
             # l_string = " ".join(np.asarray(l_vector, dtype=np.str))
             l_string = u" ".join([x.names[0] for x in found_labels])
-            print "type: %s" % (u"".join([x.names[0] for x in type_labels]))
-            images = item['images']
+            print("item:%s,\tlabels: %s" % (name, l_string))
+#            images = item['images']
 #            for image in images:
 #                print "%s %s" % (l_string, image['path'])
 
@@ -319,8 +320,8 @@ def export_images(label_path, item_path):
             # % (name, material, collar, pattern, thickness, style, brand, sleeve, zipper,
             # shoe_head, heel, handle, girdle, hardness, shape, case_handle, wheel)
         except Exception, e:
-            print e
-            print traceback.format_exc()
+            print(e)
+            print(traceback.format_exc())
             pass
 
     pass
@@ -347,9 +348,9 @@ def parse_items(path):
             shape = try_get(item, 'shape')
             case_handle = try_get(item, 'case_handle')
             wheel = try_get(item, 'wheel')
-            print "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (name, material, collar, pattern, thickness, style, brand, sleeve, zipper, shoe_head, heel, handle, girdle, hardness, shape, case_handle, wheel)
+            print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (name, material, collar, pattern, thickness, style, brand, sleeve, zipper, shoe_head, heel, handle, girdle, hardness, shape, case_handle, wheel))
         except Exception,e:
-            print e
+            print(e)
             pass
 
 
@@ -357,13 +358,22 @@ if __name__ == '__main__0':
     try:
         parse_items(sys.argv[1])
     except Exception, e:
-        print e
-        print "usage: %s [path]" % sys.argv[0]
+        print(e)
+        print("usage: %s [path]" % sys.argv[0])
 
 if __name__ == '__main__':
     try:
-        export_images(sys.argv[1], sys.argv[2])
+        if sys.argv[1] == 'item':
+            parse_items(sys.argv[2])
+        elif sys.argv[1] == 'label':
+            export_labels(sys.argv[2])
+        elif sys.argv[1] == 'image':
+            export_images(sys.argv[2], sys.argv[3])
+        else:
+            raise Exception("unknown command: %s" % sys.argv[1])
     except Exception, e:
-        print e
-        print "usage: %s [label_path] [item_path]" % sys.argv[0]
+        print(e)
+        print("usage:\n\t%s item [item_path]" % sys.argv[0])
+        print("\t%s label [label_path]" % sys.argv[0])
+        print("\t%s image [label_path] [item_path]" % sys.argv[0])
 
