@@ -247,9 +247,11 @@ def lookup_label_fill_in(item, label_group, vector):
     """
     found_labels = lookup_label_in(item, label_group)
     if len(found_labels) == 0:
-        fill_all(label_group, vector, 0)
-    else:
+        # not found, all label mark as unknown(-1)
         fill_all(label_group, vector, -1)
+    else:
+        # found label as 1, others 0
+        fill_all(label_group, vector, 0)
         for l in found_labels:
             vector[l.l_id] = 1
     return found_labels
@@ -296,25 +298,27 @@ def export_images(label_path, item_path):
                 found_labels += lookup_label_fill_in(item, global_attr, l_vector)
             # 类型属性
             for t_group in lm.item_type_groups:
-                fill_all(t_group, l_vector, -1)
+                fill_all(t_group, l_vector, 0)
                 if t_group is type_group:
                     for l in type_labels:
                         l_vector[l.l_id] = 1
             # 类型的物品属性
             for t_groups in lm.item_attr_groups:
                 if t_groups is item_attr_groups:
+                    # my item attr
                     for t_group in t_groups:
                         found_labels += lookup_label_fill_in(item, t_group, l_vector)
                 else:
+                    # other kind of item attr, all 0
                     for t_group in t_groups:
-                        fill_all(t_group, l_vector, -1)
+                        fill_all(t_group, l_vector, 0)
 
-            # l_string = " ".join(np.asarray(l_vector, dtype=np.str))
-            l_string = u" ".join([x.names[0] for x in found_labels])
-            print("item:%s,\tlabels: %s" % (name, l_string))
-#            images = item['images']
-#            for image in images:
-#                print "%s %s" % (l_string, image['path'])
+            l_string = " ".join(np.asarray(l_vector, dtype=np.str))
+            # l_string = u" ".join([x.names[0] for x in found_labels])
+#            print("item:%s,\tlabels: %s" % (name, l_string))
+            images = item['images']
+            for image in images:
+                print("%s %s" % (image['path'], l_string))
 
             # print "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
             # % (name, material, collar, pattern, thickness, style, brand, sleeve, zipper,
